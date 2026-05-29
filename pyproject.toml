@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aiblocks"
+version = "0.1.0"
+description = "A unified, modular AI framework wrapping LangChain, LlamaIndex, HuggingFace, RAGAS, and vLLM under a single clean interface."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+rag = [
+    "langchain-community>=0.2",
+    "langchain-text-splitters>=0.2",
+    "chromadb>=0.4",
+    "openai>=1.0",
+    "rank-bm25>=0.2",
+    "tiktoken>=0.5",
+]
+rag-cohere = [
+    "cohere>=5.0",
+]
+rag-huggingface = [
+    "sentence-transformers>=2.0",
+]
+evaluation = []
+all = [
+    "aiblocks[rag]",
+    "aiblocks[rag-cohere]",
+    "aiblocks[rag-huggingface]",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["aiblocks*"]
+
+[tool.setuptools.package-data]
+aiblocks = ["py.typed"]
