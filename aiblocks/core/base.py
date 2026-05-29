@@ -3,15 +3,13 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class BaseConfig(BaseModel):
     """Base configuration model for all aiblocks modules."""
 
-    class Config:
-        extra = "forbid"
-        validate_assignment = True
+    model_config = ConfigDict(extra="forbid", validate_assignment=True)
 
 
 class BaseModule(ABC):

@@ -27,16 +27,32 @@ class DocumentLoader:
         if not self._built:
             raise RuntimeError("Call build() before load()")
 
-        sources = [source] if isinstance(source, str) else source
+        sources = [source] if isinstance(source, str) else list(source)
         documents = []
+
         for path in sources:
             p = Path(path)
             if p.is_dir():
                 documents.extend(self._load_directory(p))
             elif p.is_file():
-                documents.extend(self._load_file(p))
+                ext = p.suffix.lower()
+                if ext not in self.config.supported_extensions:
+                    raise ValueError(
+                        f"Unsupported file type: {ext}. "
+                        f"Supported: {self.config.supported_extensions}"
+                    )
+                try:
+                    documents.extend(self._load_file(p))
+                except Exception as exc:
+                    print(f"  [warn] Could not load {p.name}: {exc}")
+            elif not p.exists():
+                raise FileNotFoundError(f"File not found: {p}")
             else:
-                raise FileNotFoundError(f"Path not found: {path}")
+                raise FileNotFoundError(f"File not found: {p}")
+
+        if not documents:
+            raise ValueError(f"No documents could be loaded from {source}")
+
         return documents
 
     # ------------------------------------------------------------------
@@ -58,7 +74,8 @@ class DocumentLoader:
         ext = path.suffix.lower()
         if ext not in self.config.supported_extensions:
             raise ValueError(
-                f"Unsupported extension '{ext}'. Supported: {self.config.supported_extensions}"
+                f"Unsupported file type: {ext}. "
+                f"Supported: {self.config.supported_extensions}"
             )
         return self._get_loader(ext, str(path)).load()
 

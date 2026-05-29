@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 
 from aiblocks.rag.config import VectorStoreConfig
+from aiblocks.rag.exceptions import RetrievalError
 
 
 class VectorStore:
@@ -52,6 +53,20 @@ class VectorStore:
 
     def store(self, chunks: list, embeddings: list[list[float]]) -> None:
         """Persist chunks and their pre-computed embeddings."""
+        if not chunks:
+            raise ValueError("Cannot store empty chunks list.")
+        if not embeddings:
+            raise ValueError(
+                f"Embeddings count (0) does not match chunks count ({len(chunks)}). "
+                "This is likely an embedding model error."
+            )
+        if len(embeddings) != len(chunks):
+            raise ValueError(
+                f"Embeddings count ({len(embeddings)}) does not match "
+                f"chunks count ({len(chunks)}). "
+                "This is likely an embedding model error."
+            )
+
         provider = self.config.provider
 
         if provider == "chroma":
@@ -77,35 +92,48 @@ class VectorStore:
 
     def search(self, query_embedding: list[float], top_k: int) -> list[tuple]:
         """Return up to top_k results as (text, metadata, score) tuples."""
+        if not query_embedding:
+            raise ValueError("Query vector is empty.")
+
         provider = self.config.provider
 
-        if provider == "chroma":
-            results = self._store.query(
-                query_embeddings=[query_embedding],
-                n_results=min(top_k, self._store.count()),
-                include=["documents", "metadatas", "distances"],
-            )
-            return [
-                (doc, meta, 1.0 - dist)
-                for doc, meta, dist in zip(
-                    results["documents"][0],
-                    results["metadatas"][0],
-                    results["distances"][0],
+        try:
+            if provider == "chroma":
+                results = self._store.query(
+                    query_embeddings=[query_embedding],
+                    n_results=min(top_k, self._store.count()),
+                    include=["documents", "metadatas", "distances"],
                 )
-            ]
+                return [
+                    (doc, meta, 1.0 - dist)
+                    for doc, meta, dist in zip(
+                        results["documents"][0],
+                        results["metadatas"][0],
+                        results["distances"][0],
+                    )
+                ]
 
-        elif provider == "faiss":
-            import numpy as np
-            vec = np.array([query_embedding], dtype="float32")
-            distances, indices = self._store.search(vec, top_k)
-            results = []
-            for idx, dist in zip(indices[0], distances[0]):
-                if 0 <= idx < len(self._faiss_docs):
-                    chunk = self._faiss_docs[idx]
-                    results.append((chunk.page_content, chunk.metadata, float(dist)))
-            return results
+            elif provider == "faiss":
+                import numpy as np
+                vec = np.array([query_embedding], dtype="float32")
+                distances, indices = self._store.search(vec, top_k)
+                results = []
+                for idx, dist in zip(indices[0], distances[0]):
+                    if 0 <= idx < len(self._faiss_docs):
+                        chunk = self._faiss_docs[idx]
+                        results.append((chunk.page_content, chunk.metadata, float(dist)))
+                return results
 
-        raise NotImplementedError(f"search() not implemented for provider '{provider}'")
+            raise NotImplementedError(f"search() not implemented for provider '{provider}'")
+
+        except (NotImplementedError, ValueError):
+            raise
+        except Exception as exc:
+            raise RetrievalError(
+                f"Vector search failed: {exc}. "
+                f"If using Chroma, the collection may be corrupted. "
+                f"Try deleting {self.config.persist_dir} and re-ingesting."
+            ) from exc
 
     # ------------------------------------------------------------------
     # Private helpers
