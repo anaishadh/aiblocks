@@ -6,6 +6,9 @@ from pathlib import Path
 
 from aiblocks.rag.config import LoaderConfig
 
+# PDFs with fewer extractable characters than this are treated as scanned.
+_SCANNED_PDF_THRESHOLD = 50
+
 
 class DocumentLoader:
     """Loads documents from files or directories using langchain_community loaders."""
@@ -77,7 +80,61 @@ class DocumentLoader:
                 f"Unsupported file type: {ext}. "
                 f"Supported: {self.config.supported_extensions}"
             )
+        if ext == ".pdf":
+            return self._load_pdf(path)
         return self._get_loader(ext, str(path)).load()
+
+    def _load_pdf(self, path: Path) -> list:
+        """Load a PDF, falling back to OCR when the file appears to be scanned."""
+        try:
+            from langchain_community.document_loaders import PyPDFLoader
+        except ImportError:
+            raise ImportError("Run: pip install aiblocks[rag]")
+
+        docs = PyPDFLoader(str(path)).load()
+        combined_text = " ".join(d.page_content for d in docs).strip()
+
+        if len(combined_text) >= _SCANNED_PDF_THRESHOLD:
+            return docs
+
+        # Too little text — likely a scanned PDF.
+        if not self.config.use_ocr:
+            print(
+                f"  [warn] {path.name} appears to be a scanned PDF. "
+                "Set use_ocr=True to enable OCR extraction. "
+                "Requires: pip install pytesseract pdf2image"
+            )
+            return []
+
+        return self._ocr_pdf(path)
+
+    def _ocr_pdf(self, path: Path) -> list:
+        """Extract text from a scanned PDF via pytesseract + pdf2image."""
+        try:
+            import pytesseract
+            from pdf2image import convert_from_path
+        except ImportError:
+            raise ImportError(
+                "OCR requires: pip install pytesseract pdf2image\n"
+                "Also install Tesseract OCR engine:\n"
+                "Windows: https://github.com/UB-Mannheim/tesseract/wiki"
+            )
+
+        try:
+            from langchain_core.documents import Document
+        except ImportError:
+            raise ImportError("Run: pip install aiblocks[rag]")
+
+        images = convert_from_path(str(path))
+        pages = []
+        for i, image in enumerate(images):
+            text = pytesseract.image_to_string(image)
+            if text.strip():
+                pages.append(Document(
+                    page_content=text,
+                    metadata={"source": str(path), "page": i},
+                ))
+        return pages
 
     def _get_loader(self, ext: str, path: str):
         try:
@@ -85,14 +142,12 @@ class DocumentLoader:
                 BSHTMLLoader,
                 CSVLoader,
                 Docx2txtLoader,
-                PyPDFLoader,
                 TextLoader,
             )
         except ImportError:
             raise ImportError("Run: pip install aiblocks[rag]")
 
         dispatch = {
-            ".pdf":  lambda p: PyPDFLoader(p),
             ".docx": lambda p: Docx2txtLoader(p),
             ".txt":  lambda p: TextLoader(p, encoding=self.config.encoding),
             ".md":   lambda p: TextLoader(p, encoding=self.config.encoding),

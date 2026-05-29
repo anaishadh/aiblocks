@@ -9,6 +9,7 @@ class LoaderConfig(BaseConfig):
     supported_extensions: list[str] = [".pdf", ".docx", ".txt", ".md", ".csv", ".html", ".json"]
     encoding: str = "utf-8"
     recursive: bool = False
+    use_ocr: bool = False
 
 
 class ChunkerConfig(BaseConfig):

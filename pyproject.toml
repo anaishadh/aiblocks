@@ -33,6 +33,11 @@ rag-local = [
     "ollama>=0.1",
     "sentence-transformers>=2.0",
 ]
+rag-ocr = [
+    "pytesseract>=0.3",
+    "pdf2image>=1.16",
+    "pypdf>=3.0",
+]
 evaluation = [
     "ragas>=0.1.0,<0.2.0",
     "deepeval>=0.21",
@@ -46,6 +51,7 @@ all = [
     "aiblocks[rag-cohere]",
     "aiblocks[rag-huggingface]",
     "aiblocks[rag-local]",
+    "aiblocks[rag-ocr]",
 ]
 
 [tool.setuptools.packages.find]

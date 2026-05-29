@@ -34,8 +34,13 @@ class TextChunker:
                 )
 
             elif strategy == "sentence":
+                try:
+                    import nltk
+                    nltk.download("punkt_tab", quiet=True)
+                    nltk.download("punkt", quiet=True)
+                except Exception:
+                    pass
                 from langchain_text_splitters import NLTKTextSplitter
-                # NLTK punkt tokenizer must be downloaded once: nltk.download("punkt")
                 self._splitter = NLTKTextSplitter(chunk_size=size)
 
             elif strategy == "token":
