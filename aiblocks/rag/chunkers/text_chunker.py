@@ -19,7 +19,7 @@ class TextChunker:
 
         try:
             if strategy == "fixed":
-                from langchain.text_splitter import CharacterTextSplitter
+                from langchain_text_splitters import CharacterTextSplitter
                 self._splitter = CharacterTextSplitter(
                     chunk_size=size,
                     chunk_overlap=overlap,
@@ -27,19 +27,19 @@ class TextChunker:
                 )
 
             elif strategy == "recursive":
-                from langchain.text_splitter import RecursiveCharacterTextSplitter
+                from langchain_text_splitters import RecursiveCharacterTextSplitter
                 self._splitter = RecursiveCharacterTextSplitter(
                     chunk_size=size,
                     chunk_overlap=overlap,
                 )
 
             elif strategy == "sentence":
-                from langchain.text_splitter import NLTKTextSplitter
+                from langchain_text_splitters import NLTKTextSplitter
                 # NLTK punkt tokenizer must be downloaded once: nltk.download("punkt")
                 self._splitter = NLTKTextSplitter(chunk_size=size)
 
             elif strategy == "token":
-                from langchain.text_splitter import TokenTextSplitter
+                from langchain_text_splitters import TokenTextSplitter
                 self._splitter = TokenTextSplitter(
                     chunk_size=size,
                     chunk_overlap=overlap,
@@ -48,7 +48,7 @@ class TextChunker:
             elif strategy == "semantic":
                 # SemanticChunker determines boundaries via embedding similarity.
                 # Uses OpenAI embeddings by default; requires OPENAI_API_KEY.
-                from langchain_experimental.text_splitter import SemanticChunker
+                from langchain_text_splitters import SemanticChunker
                 from langchain_openai import OpenAIEmbeddings
                 self._splitter = SemanticChunker(OpenAIEmbeddings())
 
