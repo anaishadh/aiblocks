@@ -57,33 +57,50 @@ class RagasRunner:
         return self
 
     def evaluate(self, dataset: list[dict]) -> dict[str, float]:
-        """Run ragas.evaluate() and return averaged scores."""
+        """Run ragas 0.1.x evaluate() and return averaged scores."""
         if not self._built:
             raise RuntimeError("Call build() before evaluate()")
-        if not self._metrics:
-            return {}
 
         try:
             from ragas import evaluate
-            from ragas.dataset_schema import EvaluationDataset, SingleTurnSample
+            from ragas.metrics import (
+                faithfulness,
+                answer_relevancy,
+                context_precision,
+                context_recall,
+                answer_correctness,
+            )
+            from datasets import Dataset
         except ImportError:
             raise ImportError("Run: pip install aiblocks[evaluation]")
 
-        samples = [
-            SingleTurnSample(
-                user_input=item["question"],
-                response=item["answer"],
-                retrieved_contexts=item.get("contexts", []),
-                reference=item.get("ground_truth"),
-            )
-            for item in dataset
-        ]
+        metrics_list = []
+        if self.config.faithfulness:
+            metrics_list.append(faithfulness)
+        if self.config.answer_relevancy:
+            metrics_list.append(answer_relevancy)
+        if self.config.context_precision:
+            metrics_list.append(context_precision)
+        if self.config.context_recall:
+            metrics_list.append(context_recall)
+        if self.config.answer_correctness:
+            metrics_list.append(answer_correctness)
 
-        result = evaluate(
-            EvaluationDataset(samples=samples),
-            metrics=self._metrics,
-        )
-        return self._to_dict(result)
+        if not metrics_list:
+            return {}
+
+        hf_dataset = Dataset.from_list([
+            {
+                "question": item["question"],
+                "answer": item["answer"],
+                "contexts": item.get("contexts", []),
+                "ground_truth": item.get("ground_truth", ""),
+            }
+            for item in dataset
+        ])
+
+        result = evaluate(hf_dataset, metrics=metrics_list)
+        return dict(result)
 
     @staticmethod
     def _to_dict(result) -> dict[str, float]:
