@@ -28,7 +28,13 @@ rag-cohere = [
 rag-huggingface = [
     "sentence-transformers>=2.0",
 ]
-evaluation = []
+evaluation = [
+    "ragas>=0.2",
+    "deepeval>=0.21",
+    "rouge-score>=0.1",
+    "bert-score>=0.3",
+    "nltk>=3.8",
+]
 all = [
     "aiblocks[rag]",
     "aiblocks[rag-cohere]",
