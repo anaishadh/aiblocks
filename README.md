@@ -4,7 +4,7 @@ A unified Python library that wraps LangChain, LlamaIndex, HuggingFace, RAGAS an
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
 ![License MIT](https://img.shields.io/badge/license-MIT-green)
-![pip installable](https://img.shields.io/badge/pip-installable-orange)
+[![Install from GitHub](https://img.shields.io/badge/install-from%20github-blue)](https://github.com/anaishadh/aiblocks)
 
 ---
 
@@ -27,6 +27,11 @@ Enterprise AI systems require RAG, fine-tuning, agents, evaluation and deploymen
 ---
 
 ## Installation
+
+> **Note:** aiblocks is not yet on PyPI. Install directly from GitHub:
+> ```bash
+> pip install git+https://github.com/anaishadh/aiblocks.git[rag]
+> ```
 
 ```bash
 # default RAG + core
