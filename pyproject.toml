@@ -28,6 +28,10 @@ rag-cohere = [
 rag-huggingface = [
     "sentence-transformers>=2.0",
 ]
+rag-local = [
+    "ollama>=0.1",
+    "sentence-transformers>=2.0",
+]
 evaluation = [
     "ragas>=0.1.0,<0.2.0",
     "deepeval>=0.21",
@@ -40,6 +44,7 @@ all = [
     "aiblocks[rag]",
     "aiblocks[rag-cohere]",
     "aiblocks[rag-huggingface]",
+    "aiblocks[rag-local]",
 ]
 
 [tool.setuptools.packages.find]

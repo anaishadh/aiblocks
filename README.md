@@ -80,6 +80,36 @@ print(scores)
 
 ---
 
+## Local / Open-Source Models
+
+Run aiblocks with zero API keys using Ollama.
+
+**Setup (one time):**
+1. Install Ollama from https://ollama.com
+2. Pull models:
+```bash
+ollama pull llama3.1:8b
+ollama pull nomic-embed-text
+```
+
+**Run fully local:**
+```python
+from aiblocks.rag import RAGPipeline
+
+pipeline = RAGPipeline(
+    embedding={"provider": "ollama", "model": "nomic-embed-text"},
+    generator={"provider": "ollama", "model": "llama3.1:8b"}
+).build()
+
+pipeline.ingest("your_docs/")
+print(pipeline.query("Your question?")["answer"])
+```
+
+Any model available in Ollama works — llama3.1:8b, mistral, gemma2, qwen2.5, phi3 and more.
+See available models at https://ollama.com/library
+
+---
+
 ## Configuration
 
 All config fields have sensible defaults — you only specify what you want to change.

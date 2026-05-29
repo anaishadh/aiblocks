@@ -18,9 +18,10 @@ class ChunkerConfig(BaseConfig):
 
 
 class EmbeddingConfig(BaseConfig):
-    provider: Literal["openai", "cohere", "huggingface"] = "openai"
-    model: str = "text-embedding-3-small"
+    provider: Literal["openai", "cohere", "huggingface", "ollama"] = "openai"
+    model: str = "text-embedding-3-small"  # ollama: use "nomic-embed-text"
     batch_size: int = 32
+    ollama_base_url: str = "http://localhost:11434/v1"
 
 
 class VectorStoreConfig(BaseConfig):
@@ -42,11 +43,12 @@ class RerankerConfig(BaseConfig):
 
 
 class GeneratorConfig(BaseConfig):
-    provider: Literal["openai", "anthropic", "huggingface"] = "openai"
-    model: str = "gpt-4o-mini"
+    provider: Literal["openai", "anthropic", "huggingface", "ollama"] = "openai"
+    model: str = "gpt-4o-mini"  # ollama: use e.g. "llama3.1:8b"
     temperature: float = 0.0
     max_tokens: int = 1024
     system_prompt: str = "You are a helpful assistant. Answer using only the provided context."
+    ollama_base_url: str = "http://localhost:11434/v1"
 
 
 class RAGConfig(BaseConfig):

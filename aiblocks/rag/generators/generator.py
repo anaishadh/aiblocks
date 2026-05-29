@@ -1,4 +1,4 @@
-"""LLM generator wrapping OpenAI, Anthropic, and HuggingFace inference."""
+"""LLM generator wrapping OpenAI, Anthropic, HuggingFace, and Ollama inference."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ class Generator:
 
     def __init__(self, config: GeneratorConfig) -> None:
         self.config = config
-        self._client = None      # openai / anthropic client
+        self._client = None      # openai / anthropic / ollama client
         self._pipeline = None    # transformers pipeline
 
     def build(self) -> Generator:
@@ -19,6 +19,14 @@ class Generator:
             if provider == "openai":
                 from openai import OpenAI
                 self._client = OpenAI()
+
+            elif provider == "ollama":
+                # Ollama exposes an OpenAI-compatible API at a local base URL
+                from openai import OpenAI
+                self._client = OpenAI(
+                    base_url=self.config.ollama_base_url,
+                    api_key="ollama",
+                )
 
             elif provider == "anthropic":
                 import anthropic
@@ -41,7 +49,7 @@ class Generator:
         self._assert_built()
         user_message = f"Context:\n{context}\n\nQuestion: {query}"
 
-        if self.config.provider == "openai":
+        if self.config.provider in ("openai", "ollama"):
             return self._generate_openai(user_message)
         if self.config.provider == "anthropic":
             return self._generate_anthropic(user_message)
